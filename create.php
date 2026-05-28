@@ -7,17 +7,17 @@ $error = false;
 $error_msg = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $review = $_POST['review'];
+    $comment = $_POST['comment'];
     $date = $_POST['date'];
     $venue = $_POST['venue'];
     $payment = $_POST['payment'];
     $status = 'Новая';
     include('db.php');
     $user_id = (int)$_SESSION['user_id'];
-    $review = $con->real_escape_string($review);
+    $comment = $con->real_escape_string($comment);
     $venue = $con->real_escape_string($venue);
     $payment = $con->real_escape_string($payment);
-    $query = $con->query("INSERT INTO request (review, date, curses, payment, user_id, status) VALUES ('$review', '$date', '$venue', '$payment', '$user_id', '$status')");
+    $query = $con->query("INSERT INTO request (comment, date, curses, payment, user_id, status) VALUES ('$comment', '$date', '$venue', '$payment', '$user_id', '$status')");
     if (!$query) { $error = true; $error_msg = 'Ошибка: ' . $con->error; }
     else { $success = true; }
 }
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             font-family: 'Oswald', sans-serif; background: #FFFDD0; transition: all 0.2s;
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none; border-color: #DAA520; box-shadow: 0 0 0 3px rgba(218, 165, 32, 0.1);
+            outline: none; border-color: #DAA520; box-shadow: 0 0 0 3px rgba(218,165,32,0.1);
         }
         .form-group textarea { resize: vertical; min-height: 100px; }
         .hint { font-size: 12px; color: #006400; margin-top: 8px; display: block; }
@@ -64,21 +64,33 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <div class="header"><h1>🎉 Бронирование площадки</h1><p>Заполните форму, и мы свяжемся с вами</p></div>
     <div class="nav-buttons"><a href="index.php">🏠 Главная</a><a href="history.php">📋 Мои заявки</a></div>
     <?php if ($success): ?>
-        <div class="success-message">✅ Заявка успешно отправлена!<br><br><a href="history.php">📋 Перейти к истории моих заявок →</a><br><br>🍽️ Спасибо, что выбрали нас! Мы свяжемся с вами в ближайшее время.</div>
+        <div class="success-message">✅ Заявка успешно отправлена!<br><br><a href="history.php">📋 Перейти к истории моих заявок →</a><br><br>🍽️ Спасибо, что выбрали нас!</div>
     <?php elseif ($error): ?>
-        <div class="error-message">❌ Ошибка при отправке заявки: <?= htmlspecialchars($error_msg); ?><br><a href="javascript:history.back()" style="color:#DC143C;">◀ Попробовать снова</a></div>
+        <div class="error-message">❌ Ошибка: <?= htmlspecialchars($error_msg); ?><br><a href="javascript:history.back()" style="color:#DC143C;">◀ Попробовать снова</a></div>
     <?php endif; ?>
     <?php if (!$success): ?>
     <div class="form-container">
         <form method="POST">
             <div class="form-group"><label>🍽️ Тип помещения</label><select name="venue" required><option value="Банкетный зал">🏛️ Банкетный зал</option><option value="Ресторан">🍷 Ресторан</option><option value="Летняя веранда">🌞 Летняя веранда</option><option value="Закрытая веранда">🏠 Закрытая веранда</option></select></div>
-            <div class="form-group"><label>📅 Дата и время проведения</label><input type="datetime-local" name="date" required><span class="hint">Выберите удобную дату и время для банкета</span></div>
+            <div class="form-group"><label>📅 Дата проведения (ДД.ММ.ГГГГ)</label><input type="text" name="date" id="datepicker" placeholder="31.12.2024" required><span class="hint">Формат: ДД.ММ.ГГГГ (например, 25.12.2024)</span></div>
+            <div class="form-group"><label>⏰ Время проведения</label><input type="time" name="time" id="timepicker" required><span class="hint">Выберите удобное время</span></div>
             <div class="form-group"><label>💳 Способ оплаты</label><select name="payment" required><option value="наличные">💵 Наличные</option><option value="перевод">🏦 Переводом по номеру</option><option value="карта">💳 Банковской картой</option></select></div>
-            <div class="form-group"><label>📝 Дополнительные пожелания</label><textarea name="review" placeholder="Опишите особые пожелания: меню, декор, музыкальное сопровождение и т.д..."></textarea><span class="hint">Расскажите, как мы можем сделать ваш праздник особенным</span></div>
+            <div class="form-group"><label>📝 Дополнительные пожелания</label><textarea name="comment" placeholder="Опишите особые пожелания: меню, декор, музыка..."></textarea><span class="hint">Расскажите, как мы можем сделать ваш праздник особенным</span></div>
             <button type="submit" class="btn-submit">🎉 Забронировать</button>
         </form>
     </div>
     <?php endif; ?>
 </div>
+<script>
+    const dateInput = document.getElementById('datepicker');
+    if(dateInput) {
+        dateInput.addEventListener('input', function(e) {
+            let value = this.value.replace(/[^0-9]/g, '');
+            if(value.length >= 2 && value.length < 5) this.value = value.slice(0,2) + '.' + value.slice(2);
+            else if(value.length >= 5 && value.length < 9) this.value = value.slice(0,2) + '.' + value.slice(2,4) + '.' + value.slice(4,8);
+            else if(value.length >= 8) this.value = value.slice(0,2) + '.' + value.slice(2,4) + '.' + value.slice(4,8);
+        });
+    }
+</script>
 </body>
 </html>

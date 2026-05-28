@@ -2,17 +2,8 @@
 include('db.php');
 session_start();
 
-if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
-    header('Location: login.php');
-    exit;
-}
-
-if (isset($_GET['logout'])) {
-    session_unset();
-    session_destroy();
-    header('Location: login.php');
-    exit;
-}
+if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) { header('Location: login.php'); exit; }
+if (isset($_GET['logout'])) { session_unset(); session_destroy(); header('Location: login.php'); exit; }
 
 $valid_statuses = ['Новая', 'Банкет назначен', 'Банкет завершен'];
 $status_updated = false;
@@ -20,20 +11,35 @@ $status_updated = false;
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['request_id'])) {
     $request_id = (int)$_POST['request_id'];
     $status = $_POST['status'] ?? '';
-    if (!in_array($status, $valid_statuses, true)) die('Недопустимый статус');
-    $stmt = $con->prepare("UPDATE request SET status = ? WHERE id = ?");
-    $stmt->bind_param('si', $status, $request_id);
-    if ($stmt->execute()) $status_updated = true;
-    else die('Ошибка обновления');
+    if (in_array($status, $valid_statuses, true)) {
+        $stmt = $con->prepare("UPDATE request SET status = ? WHERE id = ?");
+        $stmt->bind_param('si', $status, $request_id);
+        if ($stmt->execute()) $status_updated = true;
+    }
 }
+
+// Фильтры и сортировка
+$status_filter = $_GET['status_filter'] ?? '';
+$sort_by = $_GET['sort_by'] ?? 'date';
+$sort_order = $_GET['sort_order'] ?? 'DESC';
+$allowed_sort = ['date', 'status'];
+$sort_by = in_array($sort_by, $allowed_sort) ? $sort_by : 'date';
+$sort_order = ($sort_order === 'ASC') ? 'ASC' : 'DESC';
 
 $page = (int)($_GET['page'] ?? 1);
 $limit = 10;
 $offset = ($page - 1) * $limit;
-$query = $con->query("SELECT request.*, users.login, users.fullname, COUNT(*) OVER() as total_count FROM request INNER JOIN users ON request.user_id = users.id ORDER BY request.date DESC LIMIT $limit OFFSET $offset");
+
+$where = '';
+if ($status_filter && in_array($status_filter, $valid_statuses)) $where = "WHERE request.status = '$status_filter'";
+
+$query = $con->query("SELECT request.*, users.login, users.fullname, COUNT(*) OVER() as total_count FROM request INNER JOIN users ON request.user_id = users.id $where ORDER BY $sort_by $sort_order LIMIT $limit OFFSET $offset");
 if (!$query) die('Ошибка запроса');
+
 $stats_query = $con->query("SELECT COUNT(*) as total, SUM(CASE WHEN status='Новая' THEN 1 ELSE 0 END) as new_requests, SUM(CASE WHEN status='Банкет назначен' THEN 1 ELSE 0 END) as assigned, SUM(CASE WHEN status='Банкет завершен' THEN 1 ELSE 0 END) as completed FROM request");
 $stats = $stats_query->fetch_assoc();
+$total_records = $query->num_rows ? $query->fetch_assoc()['total_count'] ?? 0 : 0;
+$query->data_seek(0);
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -57,6 +63,14 @@ $stats = $stats_query->fetch_assoc();
         .stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         .stat-number { font-size: 42px; font-weight: 700; color: #DAA520; font-family: 'Oswald', sans-serif; }
         .stat-label { color: #006400; font-size: 12px; margin-top: 8px; }
+        .filters { padding: 20px 32px; background: #FFFDD0; border-bottom: 1px solid #FFDAB9; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+        .filter-group { display: flex; align-items: center; gap: 10px; }
+        .filter-group label { font-weight: 500; color: #000000; }
+        .filter-select { padding: 8px 16px; border: 1px solid #FFDAB9; border-radius: 20px; background: white; font-family: 'Oswald', sans-serif; }
+        .btn-filter { padding: 8px 20px; background: #DAA520; color: white; border: none; border-radius: 20px; cursor: pointer; }
+        .btn-filter:hover { background: #DC143C; }
+        .sort-link { color: #DAA520; text-decoration: none; margin-left: 15px; }
+        .sort-link:hover { color: #DC143C; }
         .requests-container { padding: 0 32px 32px; }
         .section-title { font-family: 'Oswald', sans-serif; font-size: 24px; color: #DAA520; margin-bottom: 24px; font-weight: 600; }
         .request-item { background: white; border-radius: 20px; padding: 24px; margin-bottom: 24px; border: 1px solid #FFDAB9; transition: all 0.2s; }
@@ -81,7 +95,7 @@ $stats = $stats_query->fetch_assoc();
         .form-select:focus { outline: none; border-color: #DAA520; box-shadow: 0 0 0 3px rgba(218,165,32,0.1); }
         .btn-save { width: 100%; padding: 12px; background: #DAA520; color: white; border: none; border-radius: 30px; cursor: pointer; font-family: 'Oswald', sans-serif; font-size: 16px; font-weight: 500; transition: all 0.2s; }
         .btn-save:hover { background: #DC143C; transform: translateY(-2px); }
-        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 32px; padding-bottom: 10px; }
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 32px; padding-bottom: 10px; flex-wrap: wrap; }
         .page-link { padding: 8px 16px; border: 1px solid #FFDAB9; border-radius: 20px; text-decoration: none; color: #DAA520; font-weight: 500; transition: all 0.2s; }
         .page-link:hover, .page-link.active { background: #DAA520; color: white; border-color: #DAA520; }
         .empty-state { text-align: center; padding: 60px 20px; background: #FFFDD0; border-radius: 20px; }
@@ -90,14 +104,38 @@ $stats = $stats_query->fetch_assoc();
         .notification { position: fixed; top: 20px; right: 20px; padding: 14px 28px; background: #DAA520; color: white; border-radius: 30px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); z-index: 1000; animation: slideInRight 0.3s ease-out, fadeOut 0.3s ease-out 2.7s forwards; font-weight: 500; }
         @keyframes slideInRight { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-        @media (max-width: 768px) { .header h1 { font-size: 28px; } .nav-bar { flex-direction: column; gap: 12px; } .stats-grid { grid-template-columns: 1fr; } .request-header { flex-direction: column; align-items: flex-start; } .requests-container { padding: 0 20px 20px; } }
+        @media (max-width: 768px) { .header h1 { font-size: 28px; } .nav-bar { flex-direction: column; gap: 12px; } .stats-grid { grid-template-columns: 1fr; } .request-header { flex-direction: column; align-items: flex-start; } .requests-container { padding: 0 20px 20px; } .filters { flex-direction: column; align-items: stretch; } }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header"><h1>🍽️ Панель администратора</h1><p>Управление заявками на банкетные площадки</p></div>
     <div class="nav-bar"><a href="index.php" class="btn-outline">🏠 Главная</a><a href="?logout=1" class="btn-outline" onclick="return confirm('Выйти из аккаунта?')">🚪 Выход</a></div>
-    <div class="stats-grid"><div class="stat-card"><div class="stat-number"><?= $stats['total'] ?></div><div class="stat-label">Всего заявок</div></div><div class="stat-card"><div class="stat-number"><?= $stats['new_requests'] ?></div><div class="stat-label">🆕 Новые</div></div><div class="stat-card"><div class="stat-number"><?= $stats['assigned'] ?></div><div class="stat-label">🍽️ Банкет назначен</div></div><div class="stat-card"><div class="stat-number"><?= $stats['completed'] ?></div><div class="stat-label">✅ Банкет завершен</div></div></div>
+    
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-number"><?= $stats['total'] ?></div><div class="stat-label">Всего заявок</div></div>
+        <div class="stat-card"><div class="stat-number"><?= $stats['new_requests'] ?></div><div class="stat-label">🆕 Новые</div></div>
+        <div class="stat-card"><div class="stat-number"><?= $stats['assigned'] ?></div><div class="stat-label">🍽️ Банкет назначен</div></div>
+        <div class="stat-card"><div class="stat-number"><?= $stats['completed'] ?></div><div class="stat-label">✅ Банкет завершен</div></div>
+    </div>
+    
+    <!-- Фильтры и сортировка -->
+    <div class="filters">
+        <div class="filter-group"><label>📊 Фильтр по статусу:</label>
+            <select name="status_filter" id="status_filter" class="filter-select">
+                <option value="">Все заявки</option>
+                <option value="Новая" <?= $status_filter=='Новая' ? 'selected' : '' ?>>🆕 Новые</option>
+                <option value="Банкет назначен" <?= $status_filter=='Банкет назначен' ? 'selected' : '' ?>>🍽️ Банкет назначен</option>
+                <option value="Банкет завершен" <?= $status_filter=='Банкет завершен' ? 'selected' : '' ?>>✅ Банкет завершен</option>
+            </select>
+        </div>
+        <button class="btn-filter" onclick="applyFilter()">🔍 Применить фильтр</button>
+        <div class="filter-group"><label>📋 Сортировать по:</label>
+            <a href="?sort_by=date&sort_order=<?= $sort_by=='date' && $sort_order=='DESC' ? 'ASC' : 'DESC' ?><?= $status_filter ? '&status_filter='.$status_filter : '' ?>" class="sort-link">📅 Дата <?= $sort_by=='date' ? ($sort_order=='DESC' ? '↓' : '↑') : '' ?></a>
+            <a href="?sort_by=status&sort_order=<?= $sort_by=='status' && $sort_order=='DESC' ? 'ASC' : 'DESC' ?><?= $status_filter ? '&status_filter='.$status_filter : '' ?>" class="sort-link">🏷️ Статус <?= $sort_by=='status' ? ($sort_order=='DESC' ? '↓' : '↑') : '' ?></a>
+        </div>
+    </div>
+    
     <div class="requests-container"><h2 class="section-title">📋 Список заявок</h2>
     <?php if ($query->num_rows === 0): ?>
         <div class="empty-state"><h3>Заявок пока нет</h3><p>Когда пользователи оставят заявки на банкет, они появятся здесь</p></div>
@@ -106,10 +144,8 @@ $stats = $stats_query->fetch_assoc();
         if ($request['status'] == 'Новая') $status_class = 'status-new';
         elseif ($request['status'] == 'Банкет назначен') $status_class = 'status-assigned';
         elseif ($request['status'] == 'Банкет завершен') $status_class = 'status-completed';
-        else $status_class = 'status-new';
-        
-        // Получаем дополнительные пожелания из поля review
-        $additional_info = !empty($request['review']) ? htmlspecialchars($request['review']) : '—';
+        $wishes = !empty($request['comment']) ? htmlspecialchars($request['comment']) : '—';
+        $review = !empty($request['review']) ? htmlspecialchars($request['review']) : '—';
     ?>
     <div class="request-item">
         <div class="request-header"><div class="user-info"><h3>👤 <?= htmlspecialchars($request['login']) ?></h3><p><?= htmlspecialchars($request['fullname']) ?></p></div><div class="request-meta"><span class="request-id">Заявка №<?= $request['id'] ?></span><span class="status-badge <?= $status_class ?>"><?= htmlspecialchars($request['status']) ?></span></div></div>
@@ -117,15 +153,21 @@ $stats = $stats_query->fetch_assoc();
             <div class="detail-item"><div class="detail-label">📅 Дата и время</div><div class="detail-value"><?= htmlspecialchars($request['date']) ?></div></div>
             <div class="detail-item"><div class="detail-label">🍽️ Тип площадки</div><div class="detail-value"><?= htmlspecialchars($request['curses'] ?? '—') ?></div></div>
             <div class="detail-item"><div class="detail-label">💳 Способ оплаты</div><div class="detail-value"><?= htmlspecialchars($request['payment'] ?? '—') ?></div></div>
-            <div class="detail-item"><div class="detail-label">📝 Дополнительные пожелания</div><div class="detail-value"><?= $additional_info ?></div></div>
+            <div class="detail-item"><div class="detail-label">📝 Пожелания клиента</div><div class="detail-value"><?= $wishes ?></div></div>
+            <div class="detail-item"><div class="detail-label">⭐ Отзыв клиента</div><div class="detail-value"><?= $review ?></div></div>
         </div>
-        <div class="status-form"><form method="POST"><input type="hidden" name="request_id" value="<?= $request['id'] ?>"><div class="form-group"><label class="form-label">🏷️ Изменить статус заявки:</label><select name="status" class="form-select"><option value="Новая" <?= $request['status']=='Новая' ? 'selected' : '' ?>>🆕 Новая</option><option value="Банкет назначен" <?= $request['status']=='Банкет назначен' ? 'selected' : '' ?>>🍽️ Банкет назначен</option><option value="Банкет завершен" <?= $request['status']=='Банкет завершен' ? 'selected' : '' ?>>✅ Банкет завершен</option></select></div><button type="submit" class="btn-save">💾 Сохранить изменения</button></form></div>
+        <div class="status-form"><form method="POST" onsubmit="showNotification()"><input type="hidden" name="request_id" value="<?= $request['id'] ?>"><div class="form-group"><label class="form-label">🏷️ Изменить статус заявки:</label><select name="status" class="form-select"><option value="Новая" <?= $request['status']=='Новая' ? 'selected' : '' ?>>🆕 Новая</option><option value="Банкет назначен" <?= $request['status']=='Банкет назначен' ? 'selected' : '' ?>>🍽️ Банкет назначен</option><option value="Банкет завершен" <?= $request['status']=='Банкет завершен' ? 'selected' : '' ?>>✅ Банкет завершен</option></select></div><button type="submit" class="btn-save">💾 Сохранить изменения</button></form></div>
     </div>
     <?php endwhile; endif; ?></div>
-    <?php if ($stats['total'] > $limit): $total_pages = ceil($stats['total'] / $limit); ?>
-    <div class="pagination"><?php for ($i = 1; $i <= $total_pages; $i++): ?><a href="?page=<?= $i ?>" class="page-link <?= $page === $i ? 'active' : '' ?>"><?= $i ?></a><?php endfor; ?></div>
+    
+    <?php if ($total_records > $limit): $total_pages = ceil($total_records / $limit); ?>
+    <div class="pagination"><?php for ($i = 1; $i <= $total_pages; $i++): ?><a href="?page=<?= $i ?>&sort_by=<?= $sort_by ?>&sort_order=<?= $sort_order ?><?= $status_filter ? '&status_filter='.$status_filter : '' ?>" class="page-link <?= $page === $i ? 'active' : '' ?>"><?= $i ?></a><?php endfor; ?></div>
     <?php endif; ?>
 </div>
 <?php if ($status_updated): ?><div class="notification">✅ Статус заявки успешно обновлён!</div><?php endif; ?>
+<script>
+    function applyFilter() { let status = document.getElementById('status_filter').value; window.location.href = '?status_filter=' + encodeURIComponent(status) + '&sort_by=<?= $sort_by ?>&sort_order=<?= $sort_order ?>'; }
+    function showNotification() { setTimeout(() => { location.reload(); }, 500); }
+</script>
 </body>
 </html>
