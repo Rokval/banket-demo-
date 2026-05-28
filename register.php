@@ -108,8 +108,183 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Регистрация — Банкетам.Нет</title>
-   
-  
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #fef9f0;
+            font-family: 'Inter', sans-serif;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 560px;
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.1);
+            padding: 40px 32px;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .logo h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 34px;
+            background: linear-gradient(135deg, #b45f2b, #e6a05e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .form-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        
+        .form-header h2 {
+            color: #3a2c1f;
+            font-weight: 600;
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+        
+        .form-header p {
+            color: #9b8a74;
+            font-size: 14px;
+        }
+        
+        .error-message {
+            background: #ffe6e5;
+            color: #b13b2d;
+            padding: 14px 20px;
+            border-radius: 28px;
+            margin-bottom: 24px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .success-message {
+            background: #e2f3e4;
+            color: #2b6e3c;
+            padding: 14px 20px;
+            border-radius: 28px;
+            margin-bottom: 24px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #3a2c1f;
+            font-size: 14px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1.5px solid #e5d5c0;
+            border-radius: 32px;
+            font-size: 15px;
+            background: #fefaf5;
+            transition: all 0.2s;
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #b45f2b;
+            box-shadow: 0 0 0 3px rgba(180, 95, 43, 0.1);
+        }
+        
+        .form-group input:hover {
+            border-color: #d4b48c;
+        }
+        
+        .hint {
+            font-size: 12px;
+            color: #9b8a74;
+            margin-top: 6px;
+            display: block;
+        }
+        
+        .btn-register {
+            width: 100%;
+            background: #b45f2b;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'Oswald', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+        
+        .btn-register:hover {
+            background: #9c4f22;
+            transform: translateY(-2px);
+        }
+        
+        .form-footer {
+            margin-top: 28px;
+            text-align: center;
+            border-top: 1px solid #f0e2cf;
+            padding-top: 24px;
+        }
+        
+        .form-footer p {
+            color: #6b5a48;
+            margin-bottom: 12px;
+        }
+        
+        .form-footer a {
+            color: #b45f2b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .form-footer a:hover {
+            color: #9c4f22;
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 550px) {
+            .container {
+                padding: 28px 20px;
+            }
+            .logo h1 {
+                font-size: 28px;
+            }
+            .form-header h2 {
+                font-size: 22px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
