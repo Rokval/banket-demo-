@@ -52,8 +52,81 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход — Банкетам.Нет</title>
-  
-   
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&display=swap');
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background: #fef9f0;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 460px;
+            width: 100%;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 25px 45px -12px rgba(0,0,0,0.1);
+            padding: 40px 32px;
+        }
+        .logo { text-align: center; margin-bottom: 24px; }
+        .logo h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 36px;
+            background: linear-gradient(135deg, #b45f2b, #e6a05e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .form-header { text-align: center; margin-bottom: 32px; }
+        .form-header h2 { color: #3a2c1f; font-weight: 600; font-size: 28px; margin-bottom: 8px; }
+        .error-message {
+            background: #ffe6e5;
+            color: #b13b2d;
+            padding: 14px;
+            border-radius: 28px;
+            margin-bottom: 24px;
+            text-align: center;
+            font-size: 14px;
+        }
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #3a2c1f; }
+        .form-group input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1.5px solid #e5d5c0;
+            border-radius: 32px;
+            font-size: 16px;
+            transition: 0.2s;
+            background: #fefaf5;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #b45f2b;
+            box-shadow: 0 0 0 3px rgba(180,95,43,0.1);
+        }
+        .btn-login {
+            width: 100%;
+            background: #b45f2b;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'Oswald', sans-serif;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-login:hover { background: #9c4f22; transform: translateY(-2px); }
+        .form-footer { margin-top: 28px; text-align: center; border-top: 1px solid #f0e2cf; padding-top: 24px; }
+        .form-footer a { color: #b45f2b; text-decoration: none; font-weight: 500; }
+        .form-footer a:hover { text-decoration: underline; }
+    </style>
 </head>
 <body>
 <div class="container">
