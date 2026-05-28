@@ -38,7 +38,202 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Бронирование площадки — Банкетам.Нет</title>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&display=swap" rel="stylesheet">
- 
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #fef9f0;
+            font-family: 'Inter', sans-serif;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 40px;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        /* Шапка */
+        .header {
+            background: linear-gradient(135deg, #ffffff, #fefaf5);
+            padding: 32px 32px 24px;
+            border-bottom: 1px solid #f0e2cf;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: 32px;
+            color: #b45f2b;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            color: #9b8a74;
+            font-size: 14px;
+        }
+        
+        /* Навигация */
+        .nav-buttons {
+            display: flex;
+            gap: 12px;
+            padding: 16px 32px;
+            background: #fefaf5;
+            border-bottom: 1px solid #f0e2cf;
+            justify-content: center;
+        }
+        
+        .nav-buttons a {
+            padding: 8px 24px;
+            border-radius: 40px;
+            background: #f5ede2;
+            color: #b45f2b;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-buttons a:hover {
+            background: #b45f2b;
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* Сообщения */
+        .success-message {
+            background: #e2f3e4;
+            color: #2b6e3c;
+            padding: 16px 24px;
+            margin: 24px 32px;
+            border-radius: 28px;
+            text-align: center;
+        }
+        
+        .success-message a {
+            color: #b45f2b;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .success-message a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            background: #ffe6e5;
+            color: #b13b2d;
+            padding: 16px 24px;
+            margin: 24px 32px;
+            border-radius: 28px;
+            text-align: center;
+        }
+        
+        /* Форма */
+        .form-container {
+            padding: 32px;
+        }
+        
+        .form-group {
+            margin-bottom: 28px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #3a2c1f;
+            font-size: 15px;
+        }
+        
+        .form-group label i {
+            margin-right: 8px;
+            color: #b45f2b;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 1.5px solid #e5d5c0;
+            border-radius: 32px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            background: #fefaf5;
+            transition: all 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #b45f2b;
+            box-shadow: 0 0 0 3px rgba(180, 95, 43, 0.1);
+        }
+        
+        .form-group input:hover,
+        .form-group select:hover,
+        .form-group textarea:hover {
+            border-color: #d4b48c;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .hint {
+            font-size: 12px;
+            color: #9b8a74;
+            margin-top: 8px;
+            display: block;
+        }
+        
+        /* Кнопка */
+        .btn-submit {
+            width: 100%;
+            background: #b45f2b;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'Oswald', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-submit:hover {
+            background: #9c4f22;
+            transform: translateY(-2px);
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 550px) {
+            .header h1 { font-size: 26px; }
+            .form-container { padding: 24px; }
+            .nav-buttons { flex-direction: column; align-items: center; }
+            .nav-buttons a { width: 100%; justify-content: center; }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
